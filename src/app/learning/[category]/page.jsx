@@ -1,44 +1,52 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { api } from '../../../lib/api';
+import { api, safeApi } from '../../../lib/api';
 
 export async function generateMetadata({ params }) {
-  const category = await api.getCategory(params.category).catch(() => null);
-  if (!category) return { title: 'Learning center' };
+  const cat = await safeApi(() => api.getCategory(params.category), null);
   return {
-    title: category.name,
-    description: category.description || `${category.name} lessons — Trading Insights learning center.`,
+    title: cat?.name ? `${cat.name} lessons` : 'Category',
+    description: cat?.description || `${cat?.name || 'Trading'} lessons in the free learning center.`,
+    alternates: { canonical: `/learning/${params.category}` },
   };
 }
 
-export default async function CategoryPage({ params }) {
-  const category = await api.getCategory(params.category).catch(() => null);
-  if (!category) notFound();
+export const dynamic = 'force-dynamic';
 
-  const lessons = await api.getLessons(params.category).catch(() => []);
+export default async function CategoryPage({ params }) {
+  const category = await safeApi(() => api.getCategory(params.category), null);
+  const lessons = await safeApi(() => api.getLessons(params.category), []);
+
+  if (!category && lessons.length === 0) return notFound();
 
   return (
-    <div className="section container">
-      <p className="eyebrow">Learning center</p>
-      <h1>{category.name}</h1>
-      {category.description && <p style={{ maxWidth: 620 }}>{category.description}</p>}
+    <div className="container section">
+      <nav style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>
+        <Link href="/learning">Learning</Link> / <span>{category?.name || params.category}</span>
+      </nav>
 
-      <div style={{ display: 'grid', gap: 16, marginTop: 32 }}>
-        {lessons.map((lesson, i) => (
+      <span className="eyebrow">{category?.name || params.category}</span>
+      <h1>{category?.name || params.category} lessons</h1>
+      {category?.description && <p style={{ maxWidth: 640 }}>{category.description}</p>}
+
+      <div className="grid-2 mt-32">
+        {lessons.map((lesson) => (
           <Link
             key={lesson.slug}
             href={`/learning/${params.category}/${lesson.slug}`}
-            className="card"
-            style={{ display: 'flex', gap: 16, alignItems: 'baseline' }}
+            className="card card-hover"
+            style={{ display: 'block' }}
           >
-            <span className="mono" style={{ color: 'var(--text-muted)' }}>{String(i + 1).padStart(2, '0')}</span>
-            <div>
-              <h3 style={{ marginBottom: 4 }}>{lesson.title}</h3>
-              <p style={{ margin: 0 }}>{lesson.summary}</p>
-            </div>
+            <h3>{lesson.title}</h3>
+            <p>{lesson.summary}</p>
+            <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.9rem' }}>Read lesson →</span>
           </Link>
         ))}
-        {lessons.length === 0 && <p>No lessons published in this category yet.</p>}
+        {lessons.length === 0 && (
+          <p style={{ gridColumn: '1 / -1', color: 'var(--text-muted)' }}>
+            No lessons published yet in this category.
+          </p>
+        )}
       </div>
     </div>
   );

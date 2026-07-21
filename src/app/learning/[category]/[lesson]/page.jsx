@@ -1,79 +1,77 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
-import { api } from '../../../../lib/api';
+import { api, safeApi } from '../../../../lib/api';
 
 export async function generateMetadata({ params }) {
-  const lesson = await api.getLesson(params.category, params.lesson).catch(() => null);
-  if (!lesson) return { title: 'Learning center' };
+  const lesson = await safeApi(() => api.getLesson(params.category, params.lesson), null);
+  if (!lesson) return { title: 'Lesson' };
   return {
     title: lesson.title,
-    description: lesson.summary || `${lesson.title} — Trading Insights learning center.`,
-    openGraph: lesson.coverImageUrl ? { images: [{ url: lesson.coverImageUrl }] } : undefined,
+    description: lesson.summary || lesson.title,
+    alternates: { canonical: `/learning/${params.category}/${params.lesson}` },
+    openGraph: {
+      title: lesson.title,
+      description: lesson.summary,
+      type: 'article',
+    },
   };
 }
 
-function youtubeEmbedUrl(url) {
-  if (!url) return null;
-  const match = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
-  return match ? `https://www.youtube.com/embed/${match[1]}` : null;
-}
+export const dynamic = 'force-dynamic';
 
 export default async function LessonPage({ params }) {
-  const lesson = await api.getLesson(params.category, params.lesson).catch(() => null);
-  if (!lesson || lesson.status !== 'published') notFound();
-
-  const embedUrl = youtubeEmbedUrl(lesson.videoUrl);
+  const lesson = await safeApi(() => api.getLesson(params.category, params.lesson), null);
+  if (!lesson) return notFound();
 
   return (
-    <article className="section container" style={{ maxWidth: 760 }}>
-      <p className="eyebrow">{lesson.categoryName}</p>
+    <div className="container section" style={{ maxWidth: 780 }}>
+      <nav style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>
+        <Link href="/learning">Learning</Link> /{' '}
+        <Link href={`/learning/${params.category}`}>{lesson.categoryName || params.category}</Link> /{' '}
+        <span>{lesson.title}</span>
+      </nav>
+
+      <span className="eyebrow">{lesson.categoryName || params.category}</span>
       <h1>{lesson.title}</h1>
+      {lesson.summary && (
+        <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)' }}>{lesson.summary}</p>
+      )}
 
-      {lesson.coverImageUrl && (
-        <div
-          style={{
-            position: 'relative',
-            width: '100%',
-            aspectRatio: '16 / 9',
-            borderRadius: 'var(--radius)',
-            overflow: 'hidden',
-            margin: '16px 0 32px',
-          }}
-        >
-          <Image
-            src={lesson.coverImageUrl}
-            alt={lesson.title}
-            fill
-            style={{ objectFit: 'cover' }}
-            sizes="(max-width: 760px) 100vw, 760px"
-            priority
-          />
+      {lesson.videoUrl && (
+        <div className="card mt-24" style={{ padding: 0, overflow: 'hidden', aspectRatio: '16/9' }}>
+          <video src={lesson.videoUrl} controls style={{ width: '100%', height: '100%', display: 'block' }} />
         </div>
       )}
 
-      {embedUrl && (
-        <div style={{ position: 'relative', paddingTop: '56.25%', marginBottom: 32 }}>
-          <iframe
-            src={embedUrl}
-            title={lesson.title}
-            allowFullScreen
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0, borderRadius: 'var(--radius)' }}
-          />
+      {lesson.body && (
+        <article
+          className="mt-32"
+          style={{ lineHeight: 1.75, fontSize: '1.02rem' }}
+          dangerouslySetInnerHTML={{ __html: lesson.body }}
+        />
+      )}
+
+      {lesson.pdfUrl && (
+        <div className="card mt-32" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '1.6rem' }}>📄</span>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontWeight: 600 }}>Downloadable PDF</div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Save this lesson for later.</div>
+          </div>
+          <a href={lesson.pdfUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">Download PDF</a>
         </div>
       )}
 
-      {/* Rich text content authored in the admin panel. Sanitize on the
-          backend before it is ever stored — never trust raw HTML here. */}
-      <div
-        style={{ color: 'var(--text-primary)' }}
-        dangerouslySetInnerHTML={{ __html: lesson.contentHtml }}
-      />
-
-      {lesson.pdfUrl && lesson.pdfDownloadEnabled && (
-        <a href={lesson.pdfUrl} className="btn btn-outline" style={{ marginTop: 24 }} download>
-          Download PDF
-        </a>
-      )}
-    </article>
+      <div className="card mt-40" style={{
+        padding: 32, textAlign: 'center',
+        background: 'linear-gradient(135deg, rgba(16,185,129,0.10), rgba(6,182,212,0.05))',
+      }}>
+        <h3>Apply what you learned — with real signals.</h3>
+        <p style={{ maxWidth: 480, margin: '0 auto 20px' }}>
+          Download the app to receive real-time signals matched to what you just studied.
+        </p>
+        <Link href="/download" className="btn btn-primary">⬇ Download App</Link>
+      </div>
+    </div>
   );
 }

@@ -24,20 +24,28 @@ export default function ContactForm() {
 
   if (status === 'sent') {
     return (
-      <p style={{ color: 'var(--up)', marginTop: 16 }}>
-        Thanks — we&apos;ll get back to you shortly.
-      </p>
+      <div className="card" style={{
+        background: 'var(--up-soft)',
+        border: '1px solid var(--up)',
+        textAlign: 'center',
+        padding: 32,
+      }}>
+        <div style={{ fontSize: '2rem', marginBottom: 8 }}>✓</div>
+        <h3 style={{ color: 'var(--up)' }}>Message sent!</h3>
+        <p>We&apos;ll get back to you within 24 hours.</p>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16, marginTop: 16 }}>
+    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16 }}>
       <div>
-        <label htmlFor="name">Name</label>
+        <label htmlFor="name">Your name</label>
         <input
           id="name"
           type="text"
           required
+          placeholder="Jane Trader"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
         />
@@ -48,6 +56,7 @@ export default function ContactForm() {
           id="email"
           type="email"
           required
+          placeholder="you@example.com"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
         />
@@ -58,15 +67,17 @@ export default function ContactForm() {
           id="message"
           rows={5}
           required
+          placeholder="How can we help?"
           value={form.message}
           onChange={(e) => setForm({ ...form, message: e.target.value })}
         />
       </div>
-      {status === 'error' && <p style={{ color: 'var(--down)' }}>{error}</p>}
+      {status === 'error' && (
+        <p style={{ color: 'var(--down)', fontSize: '0.9rem' }}>{error}</p>
+      )}
       <button
         type="submit"
         className="btn btn-primary"
-        style={{ justifyContent: 'center' }}
         disabled={status === 'sending'}
       >
         {status === 'sending' ? 'Sending…' : 'Send message'}

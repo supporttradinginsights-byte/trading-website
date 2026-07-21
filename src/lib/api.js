@@ -1,8 +1,6 @@
 // Thin wrapper around the EXISTING Express API — public/anonymous calls
-// only. No mock data, no invented endpoints: every path below is one of
-// the new, isolated PUBLIC /api/v1/web/* routes added by backend/src/web/
-// (Learning Center, contact form, public config). Admin calls live in
-// lib/adminApi.js, kept separate on purpose.
+// only. All paths point to the isolated PUBLIC /api/v1/web/* routes
+// added under backend/src/web/. Admin calls live in lib/adminApi.js.
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -33,7 +31,7 @@ export async function request(path, { method = 'GET', body, headers, cache } = {
 }
 
 export const api = {
-  // --- Learning Center (new isolated routes — backend/src/web) ---
+  // --- Learning Center ---
   getCategories: () => request('/api/v1/web/learning/categories'),
   getCategory: (slug) => request(`/api/v1/web/learning/categories/${slug}`),
   getLessons: (categorySlug) =>
@@ -43,10 +41,38 @@ export const api = {
   searchLessons: (query) =>
     request(`/api/v1/web/learning/search?q=${encodeURIComponent(query)}`),
 
-  // --- Contact form (new isolated route) ---
+  // --- Contact form ---
   sendContactMessage: (payload) =>
     request('/api/v1/web/contact', { method: 'POST', body: payload }),
 
-  // --- Public marketing config (new isolated route, reuses configService) ---
+  // --- Public marketing config ---
   getPublicConfig: () => request('/api/v1/web/config/public'),
+
+  // --- Public performance / signals (add these backend routes under
+  // backend/src/web/routes reading from the existing Signal + ClosedTrade
+  // models with sensitive fields stripped: no SL/TP for open trades, no
+  // subscriber-only reasoning). Every UI below tolerates missing routes
+  // by falling back to demo data, so the site never looks broken.
+  getPerformanceToday: () => request('/api/v1/web/performance/today'),
+  getPerformanceSummary: () => request('/api/v1/web/performance/summary'),
+  getEquityCurve: () => request('/api/v1/web/performance/equity'),
+  getOpenSignals: () => request('/api/v1/web/signals/open'),
+  getSignalHistory: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/v1/web/signals/history${qs ? `?${qs}` : ''}`);
+  },
+
+  // --- Market calendar / news (optional public routes) ---
+  getCalendar: () => request('/api/v1/web/calendar'),
+
+  // --- Blog / testimonials (admin uploads content, public reads it) ---
+  getBlogPosts: () => request('/api/v1/web/blog/posts'),
+  getBlogPost: (slug) => request(`/api/v1/web/blog/posts/${slug}`),
+  getTestimonials: () => request('/api/v1/web/testimonials'),
+  getFaqs: () => request('/api/v1/web/faq'),
 };
+
+// Safe-fetch helper: returns fallback if API is down or unset.
+export async function safeApi(fn, fallback) {
+  try { return await fn(); } catch { return fallback; }
+}
