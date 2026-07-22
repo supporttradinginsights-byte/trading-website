@@ -29,24 +29,44 @@ pages, layout, styling and navigation were rebuilt.
 - `/download` — App features + Play Store CTA + QR
 - `/blog`, `/faq`, `/testimonials`, `/features`, `/pricing`, `/about`, `/contact`
 
-## New public API routes to add to the backend
+## Backend API routes
 
-The website works today without them (falls back to safe demo data), but
-to make numbers real, add these routes under `backend/src/web/routes`
-reading from the existing `Signal` + `ClosedTrade` models with sensitive
-fields stripped (no SL/TP for open trades, no premium reasoning):
+### ✅ Implemented — real data (backend/src/web/routes/performance.routes.js, signals.routes.js)
 
 ```
 GET /api/v1/web/performance/today       → { issued, wins, losses, winRate, profitR, updatedAt }
-GET /api/v1/web/performance/summary     → { winRate, totalClosed, totalProfitPips, avgRR, monthly, weekly, bestMonth, worstMonth, monthly: [...] }
-GET /api/v1/web/performance/equity      → number[]  // points for equity curve
+GET /api/v1/web/performance/summary     → { winRate, totalClosed, totalProfitPips, avgRR, monthly, weekly, bestMonth, worstMonth, monthlyBreakdown: [...] }
+GET /api/v1/web/performance/equity      → number[]  // cumulative-pips points, daily buckets
 GET /api/v1/web/signals/open            → [{ pair, type, entry, status, pnl, opened }]
-GET /api/v1/web/signals/history?limit=  → [{ pair, type, result, pnl, rr, date }]
+GET /api/v1/web/signals/history?limit=  → [{ pair, type, result, pnl, rr, date, closed }]
+```
+
+Reads the existing `Signal` + `ClosedTrade` models, no writes, no new
+collections. Two known simplifications — fine for launch, worth revisiting:
+
+- **Open-position `pnl` is always `'—'`** — there's no stored "current market
+  price" on this backend (the live price feed is an in-memory TCP relay, not
+  persisted), so floating P&L can't be computed without wiring into that feed.
+- **`monthly` / `weekly` / `bestMonth` / `worstMonth` are an ESTIMATE**, not a
+  verified account return — this system tracks signal pips/outcomes, not
+  per-user equity or lot sizing. They're derived assuming a flat 1% account
+  risk per trade (see the honesty-note comment in `performanceController.js`).
+  Replace with real numbers if you track account equity separately — don't
+  present the current estimate as "verified."
+
+### 🚧 Still to add — demo data only for now
+
+```
 GET /api/v1/web/calendar                → [{ time, currency, event, impact, forecast, previous }]
 GET /api/v1/web/blog/posts              → [{ slug, title, category, date, summary }]
 GET /api/v1/web/testimonials            → [{ name, role, rating, body }]
 GET /api/v1/web/faq                     → [{ q, a, section }]
 ```
+
+The economic calendar needs a third-party data source (this backend has no
+economic-events data of its own) — a business decision on which provider to
+use, before it's just a code task. Blog/testimonials/FAQ need new admin-
+managed models, same CRUD pattern as the Learning Center.
 
 `src/lib/api.js` already has all wrappers. Every UI tolerates a missing
 route (see `safeApi()` helper) so the site never looks broken.

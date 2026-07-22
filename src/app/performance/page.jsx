@@ -36,7 +36,7 @@ export default async function PerformancePage() {
   const summary = await safeApi(() => api.getPerformanceSummary(), DEMO.summary);
   const equity = await safeApi(() => api.getEquityCurve(), DEMO.equity);
   const equityPoints = Array.isArray(equity) ? equity : (equity?.points || DEMO.equity);
-  const monthly = summary.monthly || DEMO.monthly;
+  const monthly = summary.monthlyBreakdown || DEMO.monthly;
 
   return (
     <div className="container section">
