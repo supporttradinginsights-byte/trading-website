@@ -30,7 +30,7 @@ export default function DownloadPage() {
 
           <div style={{ display: 'flex', gap: 14, marginTop: 28, flexWrap: 'wrap' }}>
             <a
-              href="https://play.google.com/store"
+              href="https://play.google.com/store/apps/details?id=com.premium.trading_insights.signals"
               target="_blank" rel="noopener noreferrer"
               className="btn btn-primary btn-lg"
             >
@@ -92,7 +92,7 @@ export default function DownloadPage() {
             Install the app, start your free trial, and get your first signal within
             hours.
           </p>
-          <a href="https://play.google.com/store" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg">▶ Download on Google Play</a>
+          <a href="https://play.google.com/store/apps/details?id=com.premium.trading_insights.signals" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg">▶ Download on Google Play</a>
         </div>
       </section>
     </div>

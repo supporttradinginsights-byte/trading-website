@@ -73,7 +73,7 @@ export default async function HomePage() {
                   ⬇ Download App
                 </Link>
                 <a
-                  href="https://play.google.com/store"
+                  href="https://play.google.com/store/apps/details?id=com.premium.trading_insights.signals"
                   target="_blank" rel="noopener noreferrer"
                   className="btn btn-outline btn-lg"
                 >
@@ -254,7 +254,7 @@ export default async function HomePage() {
               and a live equity dashboard — all in the app.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <a href="https://play.google.com/store" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg">
+              <a href="https://play.google.com/store/apps/details?id=com.premium.trading_insights.signals" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg">
                 ▶ Get it on Google Play
               </a>
               <Link href="/download" className="btn btn-outline btn-lg">See app features</Link>

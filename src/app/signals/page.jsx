@@ -103,7 +103,7 @@ export default async function LiveSignalsPage() {
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/download" className="btn btn-primary btn-lg">⬇ Download App</Link>
-            <a href="https://play.google.com/store" target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-lg">▶ Google Play</a>
+            <a href="https://play.google.com/store/apps/details?id=com.premium.trading_insights.signals" target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-lg">▶ Google Play</a>
           </div>
         </div>
       </section>
