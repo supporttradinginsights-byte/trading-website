@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { api } from '../../lib/api';
 
 export default function ContactForm() {
-  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [form, setForm] = useState({ name: '', email: '', message: '', website: '' });
   const [status, setStatus] = useState('idle'); // idle | sending | sent | error
   const [error, setError] = useState('');
 
@@ -15,7 +15,7 @@ export default function ContactForm() {
     try {
       await api.sendContactMessage(form);
       setStatus('sent');
-      setForm({ name: '', email: '', message: '' });
+      setForm({ name: '', email: '', message: '', website: '' });
     } catch (err) {
       setStatus('error');
       setError(err.message);
@@ -39,6 +39,20 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16 }}>
+      {/* Honeypot — real users never see or fill this (off-screen, no label,
+          tabIndex -1, autoComplete off). Bots that auto-fill every input on
+          a page usually fill it anyway, which is exactly the signal the
+          backend uses to silently drop the submission. */}
+      <input
+        type="text"
+        name="website"
+        value={form.website}
+        onChange={(e) => setForm({ ...form, website: e.target.value })}
+        tabIndex="-1"
+        autoComplete="off"
+        aria-hidden="true"
+        style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+      />
       <div>
         <label htmlFor="name">Your name</label>
         <input
